@@ -1,56 +1,96 @@
+[workspace]
+resolver = "2"
+
 [package]
 name = "waterui-mermaid"
 version = "0.1.0"
-edition.workspace = true
-authors.workspace = true
-license.workspace = true
-readme = "../../../README.md"
-repository.workspace = true
+edition = "2024"
+rust-version = "1.95"
+authors = ["Lexo Liu <me@lexo.cool>"]
+license = "Apache-2.0 OR MIT"
+readme = "README.md"
+repository = "https://github.com/water-rs/mermaid"
 description = "Mermaid diagram component for WaterUI, drawn through Scene2D"
 keywords = ["mermaid", "diagram", "flowchart", "waterui"]
 categories = ["gui", "visualization"]
 # `merman-core` / `merman-render` are consumed from the water-rs/merman fork
-# (git, see the root manifest) until upstream releases the typed layout
-# projection; crates.io refuses git-only dependencies, so this crate cannot be
-# published and must not abort the release run for the crates behind it (#533).
+# (git, below) until upstream releases the typed layout projection; crates.io
+# refuses git-only dependencies, so this crate cannot be published yet and
+# release-plz must not run `cargo publish` for it (water-rs/waterui#533).
 publish = false
 
+[lints.rust]
+missing_docs = "warn"
+missing_debug_implementations = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+style = { level = "warn", priority = -1 }
+correctness = { level = "warn", priority = -1 }
+complexity = { level = "warn", priority = -1 }
+suspicious = { level = "warn", priority = -1 }
+perf = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+cargo = { level = "warn", priority = -1 }
+undocumented_unsafe_blocks = "warn"
+multiple_crate_versions = { level = "allow", priority = 1 }
+
 [dependencies]
-waterui-core.workspace = true
-waterui-canvas.workspace = true
-waterui-graphics.workspace = true
-waterui-layout.workspace = true
+waterui-core = "0.3.2"
+waterui-canvas = "0.1.2"
+waterui-graphics = { version = "0.4.1", default-features = false }
+waterui-layout = "0.3.2"
 # `system-fonts` is what lets a host with no font stack of its own — the native
 # Apple, Android and GTK backends — install a collection at all. A diagram is
 # measured from real faces, so a build carrying this component must be able to
 # reach them.
-waterui-text = { workspace = true, features = ["system-fonts"] }
-waterui-str.workspace = true
-nami.workspace = true
-merman-core.workspace = true
-merman-render.workspace = true
+waterui-text = { version = "0.4.1", features = ["system-fonts"] }
+waterui-str = "0.3.0"
+nami = "0.11.2"
+# Mermaid parsing, semantic model and diagram layout. Consumed from our fork
+# while `typed-layout-projection` is unreleased upstream: `merman-render`'s only
+# public exit from the layout stage is `layout_json`, whose `#[serde(skip)]`
+# fields drop geometry a self-drawing host needs — a sequence diagram's
+# loop/alt fragment boxes among them. The branch makes the typed projection
+# public and changes nothing else. See water-rs/waterui#217.
+merman-core = { git = "https://github.com/water-rs/merman", rev = "a6f41d47b497c05844003a0e765a3cf78df6678d" }
+merman-render = { git = "https://github.com/water-rs/merman", rev = "a6f41d47b497c05844003a0e765a3cf78df6678d", default-features = false }
 # Only to read Mermaid's own `fontSize` out of the effective config, which
 # `merman-core` exposes as a JSON value.
-serde_json.workspace = true
+serde_json = "1.0"
 # The host text measurement `merman-render` lays diagrams out with. The faces
 # come from the application's shared `FontCollection`, which this crate only
 # reads: `parley` is here for the shaping the collection is handed to, not to
 # discover fonts.
-parley = { workspace = true, features = ["std"] }
-thiserror.workspace = true
+parley = { version = "0.11", default-features = false, features = ["std"] }
+thiserror = "2.0.20"
 
 [dev-dependencies]
 # The tests mount real Markdown, so they need the Markdown stack on top of the
 # `highlight` feature the library half selects.
-waterui = { path = "../../..", features = ["flow-markdown"] }
-waterui-testing = { path = "../../../testing" }
-hydrolysis-m3.workspace = true
-
-[lints]
-workspace = true
+waterui = { version = "0.4.1", features = ["flow-markdown"] }
+waterui-testing = "0.4.1"
+hydrolysis-m3 = "0.2.0"
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [package.metadata.cargo-machete]
 # The crate-level example is a doctest, and doctests are the one place
 # `cargo machete` does not look. `waterui` is what its `use waterui::prelude::*`
 # resolves against.
 ignored = ["waterui"]
+
+# The WaterUI packages above come from crates.io, so this repository builds
+# against the same released APIs its users get. The third-party pins below are
+# the framework's own: the published `waterui-graphics` was built with these
+# forks, and dropping them here would render this crate's tests through
+# different code than the framework runs.
+[patch.crates-io]
+xcb = { git = "https://github.com/rust-x-bindings/rust-xcb", rev = "ae3b2cd080e78173223038ccbebdc644eaf4a9ad" }
+block = { git = "https://github.com/Dicklesworthstone/rust-block", rev = "b39ae859d1ee8e8cb5eef6a516471f1578d26b96" }
+vello = { git = "https://github.com/lexoliu/vello", rev = "5e5f538556be16527f67379b105af82f408b747d" }
+vello_hybrid = { git = "https://github.com/lexoliu/vello", rev = "d68d9e9825bcd1ffee762323881c13a2e7a3f639" }
+vello_common = { git = "https://github.com/lexoliu/vello", rev = "d68d9e9825bcd1ffee762323881c13a2e7a3f639" }
+vello_sparse_shaders = { git = "https://github.com/lexoliu/vello", rev = "d68d9e9825bcd1ffee762323881c13a2e7a3f639" }
+glifo = { git = "https://github.com/lexoliu/vello", rev = "d68d9e9825bcd1ffee762323881c13a2e7a3f639" }
