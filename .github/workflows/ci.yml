@@ -40,6 +40,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y nasm libasound2-dev libva-dev libfontconfig1-dev libgbm-dev libxcb1-dev libglib2.0-dev libpango1.0-dev libgdk-pixbuf-2.0-dev libgtk-4-dev libpipewire-0.3-dev libudev-dev libegl-dev libwayland-dev libxkbcommon-dev mesa-vulkan-drivers libvulkan1 fonts-noto-core fonts-noto-cjk
+      # shaderloom compiles the WGSL waterui-graphics ships to DXIL on
+      # Windows; the runner image does not ship dxc.
+      - name: Install DirectX Shader Compiler
+        if: runner.os == 'Windows'
+        uses: ./.github/actions/install-dxc
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --workspace --all-targets --all-features
       # nextest-style `--all-targets` does not run doctests; the lib's doctest
