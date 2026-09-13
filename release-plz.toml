@@ -1,0 +1,17 @@
+[workspace]
+pr_draft = false
+pr_labels = ["release"]
+git_release_name = "v{{ version }}"
+# `publish = false`: the crate's `merman-core`/`merman-render` dependencies are
+# git-only until upstream releases the typed layout projection, so crates.io
+# cannot take it. release-plz still produces the changelog, the tag and the
+# GitHub release — everything except `cargo publish`.
+publish = false
+release_always = true
+git_tag_enable = true
+changelog_update = true
+
+[[package]]
+name = "waterui-mermaid"
+git_release_name = "v{{ version }}"
+git_tag_name = "v{{ version }}"
