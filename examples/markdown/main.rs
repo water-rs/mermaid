@@ -21,7 +21,7 @@ fn main() {
 
     let mut app = test_ui()
         .viewport(800, 1000)
-        .theme(hydrolysis_m3::install)
+        .theme(hydrolysis_m3::Material3::defaults())
         .mount_offscreen(|| {
             // Installing the Mermaid realization is the application's job —
             // `waterui` has no dependency on `waterui-mermaid`, which is what
