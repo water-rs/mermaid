@@ -5,7 +5,7 @@
 //! while every other fence in the same document is declined and comes back as
 //! an ordinary code block.
 
-use hydrolysis_m3::install as install_m3;
+use hydrolysis_m3::Material3;
 use waterui::env::use_env;
 use waterui::metadata::Metadata;
 use waterui::prelude::*;
@@ -30,7 +30,7 @@ fn main() {}
 fn app() -> OffscreenApp {
     test_ui()
         .viewport(900, 900)
-        .theme(install_m3)
+        .theme(Material3::defaults())
         .mount_offscreen(|| {
             use_env(|mut env: Environment| {
                 waterui_mermaid::install(&mut env);
@@ -61,7 +61,7 @@ fn every_other_fence_is_still_a_code_block() {
 fn install_yields_to_a_hook_that_is_already_there() {
     let mut app = test_ui()
         .viewport(600, 400)
-        .theme(install_m3)
+        .theme(Material3::defaults())
         .mount_offscreen(|| {
             use_env(|mut env: Environment| {
                 env.insert_hook::<CodeConfig, AnyView>(|_env, _config| {

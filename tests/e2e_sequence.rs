@@ -5,7 +5,7 @@
 //! an accessibility node. The geometry assertions are the ones that catch a
 //! label placed at the origin instead of on its message.
 
-use hydrolysis_m3::install;
+use hydrolysis_m3::Material3;
 use waterui_mermaid::mermaid;
 use waterui_testing::{OffscreenApp, Role, ui as test_ui};
 
@@ -35,7 +35,7 @@ sequenceDiagram
 fn app(source: &'static str) -> OffscreenApp {
     test_ui()
         .viewport(900, 700)
-        .theme(install)
+        .theme(Material3::defaults())
         .mount_offscreen(move || mermaid(source))
 }
 

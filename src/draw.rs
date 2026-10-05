@@ -16,6 +16,7 @@ use alloc::vec::Vec;
 
 use waterui_canvas::{DrawingContext, Path};
 use waterui_core::layout::Point;
+use waterui_graphics::color::Working;
 
 use crate::layout::{DiagramLayout, Edge, EdgeMarker, EdgeStroke};
 use crate::shape;
@@ -44,16 +45,16 @@ pub fn diagram(ctx: &mut DrawingContext, layout: &DiagramLayout, palette: &Palet
 
     for cluster in &layout.clusters {
         let frame = offset_rect(cluster.frame, origin);
-        ctx.set_fill_style(palette.cluster);
+        ctx.set_fill_style(Working(palette.cluster));
         ctx.fill_rect(frame);
-        ctx.set_stroke_style(palette.border);
+        ctx.set_stroke_style(Working(palette.border));
         ctx.set_line_width(STROKE);
         ctx.stroke_rect(frame);
     }
 
     for fragment in &layout.fragments {
         let frame = offset_rect(fragment.frame, origin);
-        ctx.set_stroke_style(palette.border);
+        ctx.set_stroke_style(Working(palette.border));
         ctx.set_line_width(STROKE);
         ctx.stroke_rect(frame);
         for divider in &fragment.dividers {
@@ -65,7 +66,7 @@ pub fn diagram(ctx: &mut DrawingContext, layout: &DiagramLayout, palette: &Palet
     }
 
     for lifeline in &layout.lifelines {
-        ctx.set_stroke_style(palette.border);
+        ctx.set_stroke_style(Working(palette.border));
         ctx.set_line_width(STROKE);
         ctx.set_line_dash(DASH.to_vec());
         ctx.stroke_line(
@@ -82,14 +83,14 @@ pub fn diagram(ctx: &mut DrawingContext, layout: &DiagramLayout, palette: &Palet
     for node in &layout.nodes {
         let outline = shape::outline(node.shape, offset_rect(node.frame, origin));
         if let Some(body) = &outline.body {
-            ctx.set_fill_style(palette.node_fill);
+            ctx.set_fill_style(Working(palette.node_fill));
             ctx.fill_path(body);
-            ctx.set_stroke_style(palette.node_border);
+            ctx.set_stroke_style(Working(palette.node_border));
             ctx.set_line_width(STROKE);
             ctx.stroke_path(body);
         }
         for detail in &outline.details {
-            ctx.set_stroke_style(palette.node_border);
+            ctx.set_stroke_style(Working(palette.node_border));
             ctx.set_line_width(STROKE);
             ctx.stroke_path(detail);
         }
@@ -114,7 +115,7 @@ fn connector(ctx: &mut DrawingContext, edge: &Edge, palette: &Palette, origin: P
         return;
     };
 
-    ctx.set_stroke_style(palette.edge);
+    ctx.set_stroke_style(Working(palette.edge));
     ctx.set_line_width(match edge.stroke {
         EdgeStroke::Thick => THICK_STROKE,
         EdgeStroke::Normal | EdgeStroke::Dotted => STROKE,
@@ -223,16 +224,16 @@ fn marker(
                 (-ux).mul_add(ARROW_HALF_WIDTH, back.y),
             ));
             head.close();
-            ctx.set_fill_style(palette.edge);
+            ctx.set_fill_style(Working(palette.edge));
             ctx.fill_path(&head);
         }
         EdgeMarker::Circle => {
-            ctx.set_stroke_style(palette.edge);
+            ctx.set_stroke_style(Working(palette.edge));
             ctx.set_line_width(STROKE);
             ctx.stroke_circle(tip, MARKER_RADIUS);
         }
         EdgeMarker::Cross => {
-            ctx.set_stroke_style(palette.edge);
+            ctx.set_stroke_style(Working(palette.edge));
             ctx.set_line_width(STROKE);
             ctx.stroke_line(
                 Point::new(tip.x - CROSS_ARM, tip.y - CROSS_ARM),

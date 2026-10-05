@@ -10,25 +10,25 @@
 use nami::{Signal, SignalExt as _};
 use waterui_core::{Environment, resolve::Resolvable};
 use waterui_graphics::color::{
-    BorderColor, ForegroundColor, MutedForegroundColor, ResolvedColor, SurfaceColor,
-    SurfaceVariantColor,
+    BorderColor, ForegroundColor, MutedForegroundColor, SurfaceColor, SurfaceVariantColor,
+    WorkingColor,
 };
 
 /// The colours one diagram is drawn with.
 #[derive(Debug, Clone, Copy)]
 pub struct Palette {
     /// Fill of a node box.
-    pub node_fill: ResolvedColor,
+    pub node_fill: WorkingColor,
     /// Outline of a node box.
-    pub node_border: ResolvedColor,
+    pub node_border: WorkingColor,
     /// Connectors and their decorations.
-    pub edge: ResolvedColor,
+    pub edge: WorkingColor,
     /// Fill of a subgraph or participant frame.
-    pub cluster: ResolvedColor,
+    pub cluster: WorkingColor,
     /// Frame outlines and dividers.
-    pub border: ResolvedColor,
+    pub border: WorkingColor,
     /// Label text, for the rare label the scene draws itself.
-    pub foreground: ResolvedColor,
+    pub foreground: WorkingColor,
 }
 
 /// The environment key that resolves a [`Palette`].

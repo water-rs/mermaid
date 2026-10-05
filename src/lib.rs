@@ -24,9 +24,10 @@
 //!   every other component. Without it, boxes would be sized from a browser
 //!   compatibility profile and the glyphs inside them drawn from ours, and the
 //!   text would not fit.
-//! - **Geometry is drawn through `Scene2D`.** Node outlines, subgraph frames and
-//!   routed connectors are vector paths on the shared scene contract, so one
-//!   drawing path serves every backend.
+//! - **Geometry is recorded through the canvas onto the
+//!   `waterui_graphics::draw` contract.** Node outlines, subgraph frames and
+//!   routed connectors are vector paths on the render-target-neutral
+//!   recording contract, so one drawing path serves every backend.
 //! - **Text is not drawn into the scene.** Labels are real `text()` views placed
 //!   into the boxes layout reserved for them, which is what gives a diagram a
 //!   meaningful accessibility tree and the platform's own text rendering.
@@ -47,11 +48,12 @@ use alloc::vec::Vec;
 
 use nami::SignalExt as _;
 use waterui_canvas::Canvas;
-use waterui_core::layout::{Layout, Point, ProposalSize, Rect, Size, StretchAxis, SubView};
+use waterui_core::layout::{
+    Layout, Point, ProposalSize, Rect, Size, StretchAxis, SubView, SubviewPlacement,
+};
 use waterui_core::view::{Hook, ViewConfiguration as _};
-use waterui_core::{AnyView, Environment, View, resolve::Resolvable as _};
+use waterui_core::{AnyView, Environment, Str, View, resolve::Resolvable as _};
 use waterui_layout::container::FixedContainer;
-use waterui_str::Str;
 use waterui_text::FontCollection;
 use waterui_text::code::CodeConfig;
 use waterui_text::text;
@@ -200,18 +202,29 @@ impl Layout for Placement {
         self.size
     }
 
-    fn place(&self, bounds: Rect, children: &[&dyn SubView]) -> Vec<Rect> {
+    fn place(
+        &self,
+        bounds: Rect,
+        _proposal: ProposalSize,
+        children: &[&dyn SubView],
+    ) -> Vec<SubviewPlacement> {
         let origin = bounds.origin();
-        let mut frames = Vec::with_capacity(children.len());
+        let placed = |frame: Rect| {
+            SubviewPlacement::new(
+                frame,
+                ProposalSize::new(Some(frame.width()), Some(frame.height())),
+            )
+        };
+        let mut placements = Vec::with_capacity(children.len());
         // The scene, covering the whole diagram.
-        frames.push(Rect::new(origin, self.size));
-        frames.extend(self.labels.iter().map(|frame| {
-            Rect::new(
+        placements.push(placed(Rect::new(origin, self.size)));
+        placements.extend(self.labels.iter().map(|frame| {
+            placed(Rect::new(
                 Point::new(frame.x() + origin.x, frame.y() + origin.y),
                 *frame.size(),
-            )
+            ))
         }));
-        frames
+        placements
     }
 
     fn stretch_axis(&self, _children: &[StretchAxis]) -> StretchAxis {

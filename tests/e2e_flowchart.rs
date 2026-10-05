@@ -6,7 +6,7 @@
 //! subgraph title has to reach the accessibility tree as its own node, at the
 //! position the geometry put it.
 
-use hydrolysis_m3::install;
+use hydrolysis_m3::Material3;
 use waterui_mermaid::mermaid;
 use waterui_testing::{OffscreenApp, Role, ui as test_ui};
 
@@ -32,7 +32,7 @@ flowchart LR
 fn app(source: &'static str) -> OffscreenApp {
     test_ui()
         .viewport(800, 600)
-        .theme(install)
+        .theme(Material3::defaults())
         .mount_offscreen(move || mermaid(source))
 }
 
@@ -115,7 +115,7 @@ flowchart TD
 ";
     let mut app = test_ui()
         .viewport(900, 400)
-        .theme(install)
+        .theme(Material3::defaults())
         .mount_offscreen(|| mermaid(WIDTHS));
 
     let short = app.query().role(Role::LABEL).label("i").single().bounds();
@@ -144,7 +144,7 @@ flowchart TD
 fn a_broken_diagram_reports_itself() {
     let mut app = test_ui()
         .viewport(600, 200)
-        .theme(install)
+        .theme(Material3::defaults())
         .mount_offscreen(|| mermaid("this is not a diagram"));
 
     assert!(
@@ -163,7 +163,7 @@ fn export_flowchart_images_for_visual_review() {
     for (case, source) in [("decision", DECISION), ("subgraphs", SUBGRAPHS)] {
         let mut app = test_ui()
             .viewport(800, 600)
-            .theme(install)
+            .theme(Material3::defaults())
             .mount_offscreen(move || mermaid(source));
         let captured = app.capture_snapshot("mermaid", case, "rendered");
         assert!(captured.path().is_file());
