@@ -24,11 +24,10 @@
 //!   every other component. Without it, boxes would be sized from a browser
 //!   compatibility profile and the glyphs inside them drawn from ours, and the
 //!   text would not fit.
-//! - **Geometry is recorded through the canvas onto the
-//!   `waterui_graphics::draw` contract.** Node outlines, subgraph frames and
-//!   routed connectors are vector paths on the render-target-neutral
-//!   recording contract, so one drawing path serves every backend.
-//! - **Text is not drawn into the scene.** Labels are real `text()` views placed
+//! - **Geometry is drawn on a `waterui_graphics::canvas`.** Node outlines,
+//!   subgraph frames and routed connectors are vector paths recorded once, when
+//!   the canvas mounts, so one drawing path serves every backend.
+//! - **Text is not drawn on the canvas.** Labels are real `text()` views placed
 //!   into the boxes layout reserved for them, which is what gives a diagram a
 //!   meaningful accessibility tree and the platform's own text rendering.
 //! - **Colours come from theme tokens.** A diagram follows a light/dark switch
@@ -47,12 +46,13 @@ use alloc::format;
 use alloc::vec::Vec;
 
 use nami::SignalExt as _;
-use waterui_canvas::Canvas;
 use waterui_core::layout::{
-    Layout, Point, ProposalSize, Rect, Size, StretchAxis, SubView, SubviewPlacement,
+    Layout, LayoutError, PlacementInput, Point, ProposalSize, Rect, Size, StretchAxis, SubView,
+    SubviewPlacement, UnitPoint,
 };
 use waterui_core::view::{Hook, ViewConfiguration as _};
 use waterui_core::{AnyView, Environment, Str, View, resolve::Resolvable as _};
+use waterui_graphics::canvas::Canvas;
 use waterui_layout::container::FixedContainer;
 use waterui_text::FontCollection;
 use waterui_text::code::CodeConfig;
@@ -125,11 +125,13 @@ pub fn install(env: &mut Environment) {
     if env.get::<Hook<CodeConfig>>().is_some() {
         return;
     }
-    env.insert_hook::<CodeConfig, AnyView>(|_env, config| match config.info.as_deref() {
-        // `mmd` is Mermaid's own file extension, and the tag editors emit for a
-        // Mermaid block alongside the spelled-out one.
-        Some("mermaid" | "mmd") => AnyView::new(Mermaid::new(config.content)),
-        _ => AnyView::new(config.render()),
+    env.insert_hook::<CodeConfig, AnyView>(|_env, config| {
+        match config.info().map(AsRef::<str>::as_ref) {
+            // `mmd` is Mermaid's own file extension, and the tag editors emit for a
+            // Mermaid block alongside the spelled-out one.
+            Some("mermaid" | "mmd") => AnyView::new(Mermaid::new(config.content().clone())),
+            _ => AnyView::new(config.render()),
+        }
     });
 }
 
@@ -146,18 +148,16 @@ impl View for Mermaid {
     }
 }
 
-/// The scene and the labels of a diagram that laid out successfully.
+/// The canvas and the labels of a diagram that laid out successfully.
 fn drawn(diagram: &DiagramLayout, env: &Environment) -> impl View + use<> {
     let palette = DiagramPalette.resolve(env).computed();
-    let scene = {
+    let canvas = {
         let diagram = diagram.clone();
-        Canvas::with_signal(palette, move |ctx, palette| {
-            draw::diagram(ctx, &diagram, &palette, Point::zero());
-        })
+        Canvas::new(move |cx| draw::diagram(cx, &diagram, &palette, Point::zero()))
     };
 
     let mut cells: Vec<AnyView> = Vec::with_capacity(diagram.nodes.len() + 1);
-    cells.push(AnyView::new(scene));
+    cells.push(AnyView::new(canvas));
     cells.extend(diagram.labels().map(|label| {
         AnyView::new(FixedContainer::new(
             label::Placement::new(label.frame),
@@ -200,6 +200,16 @@ impl Placement {
 impl Layout for Placement {
     fn size_that_fits(&self, _proposal: ProposalSize, _children: &[&dyn SubView]) -> Size {
         self.size
+    }
+
+    /// The diagram's natural size, at the bounds' origin: the canvas and the
+    /// labels are placed in the diagram's own coordinates from there.
+    fn resolve_extent(
+        &self,
+        input: PlacementInput,
+        _children: &[&dyn SubView],
+    ) -> Result<Rect, LayoutError> {
+        Ok(input.bounds.align(input.extent()?, UnitPoint::TOP_LEADING))
     }
 
     fn place(
