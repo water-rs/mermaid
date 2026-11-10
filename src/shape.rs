@@ -10,8 +10,8 @@
 use alloc::vec;
 use alloc::vec::Vec;
 
-use waterui_canvas::Path;
 use waterui_core::layout::{Point, Rect, Size};
+use waterui_graphics::canvas::Path;
 
 use crate::layout::NodeShape;
 
@@ -58,12 +58,12 @@ impl Outline {
 /// A closed outline, held as the segments it is made of before it is lowered
 /// into a [`Path`].
 ///
-/// A `Path` is write-only — it takes drawing commands and hands the renderer a
-/// `kurbo` path, and nothing can read back what it was given. Keeping the
-/// geometry here first is what lets the outlines be checked rather than only
-/// looked at: a contour states where it starts, every segment states where it
-/// ends, and each one starts where the last one ended by construction, so an
-/// outline made of pieces that do not join cannot be expressed.
+/// A `Path` is built one command at a time and nothing can read back what it
+/// was given. Keeping the geometry here first is what lets the outlines be
+/// checked rather than only looked at: a contour states where it starts, every
+/// segment states where it ends, and each one starts where the last one ended
+/// by construction, so an outline made of pieces that do not join cannot be
+/// expressed.
 struct Contour {
     /// Where the outline starts, and where its last segment returns to.
     start: Point,
@@ -134,16 +134,17 @@ impl Contour {
 
     /// Lowers the contour into one closed sub-path.
     fn to_path(&self) -> Path {
-        let mut path = Path::new();
-        path.move_to(self.start);
-        for segment in &self.segments {
-            match *segment {
-                Segment::Line(end) => path.line_to(end),
-                Segment::Cubic { first, second, end } => path.bezier_to(first, second, end),
-            }
-        }
-        path.close();
-        path
+        self.segments
+            .iter()
+            .fold(
+                Path::builder().move_to(self.start),
+                |path, segment| match *segment {
+                    Segment::Line(end) => path.line_to(end),
+                    Segment::Cubic { first, second, end } => path.cubic_to(first, second, end),
+                },
+            )
+            .close()
+            .build()
     }
 }
 
@@ -182,9 +183,7 @@ pub fn label_area(shape: NodeShape, frame: Rect) -> Rect {
 pub fn outline(shape: NodeShape, frame: Rect) -> Outline {
     match shape {
         NodeShape::Rectangle | NodeShape::Participant | NodeShape::Note => {
-            let mut path = Path::new();
-            path.rect(frame);
-            Outline::plain(path)
+            Outline::plain(rectangle(frame))
         }
         NodeShape::RoundedRectangle => Outline::plain(rounded_rect(frame, CORNER_RADIUS).to_path()),
         NodeShape::Stadium => Outline::plain(stadium(frame).to_path()),
@@ -210,23 +209,31 @@ pub fn outline(shape: NodeShape, frame: Rect) -> Outline {
 
 /// `A[[text]]` — a rectangle with a vertical rule inset from each end.
 fn subroutine(frame: Rect) -> Outline {
-    let mut path = Path::new();
-    path.rect(frame);
-
     let details = [SUBROUTINE_INSET, frame.width() - SUBROUTINE_INSET]
         .into_iter()
         .map(|inset| {
-            let mut rule = Path::new();
-            rule.move_to(Point::new(frame.x() + inset, frame.y()));
-            rule.line_to(Point::new(frame.x() + inset, frame.max_y()));
-            rule
+            Path::builder()
+                .move_to(Point::new(frame.x() + inset, frame.y()))
+                .line_to(Point::new(frame.x() + inset, frame.max_y()))
+                .build()
         })
         .collect();
 
     Outline {
-        body: Some(path),
+        body: Some(rectangle(frame)),
         details,
     }
+}
+
+/// The closed outline of `frame` itself.
+fn rectangle(frame: Rect) -> Path {
+    Path::builder()
+        .move_to(frame.origin())
+        .line_to(Point::new(frame.max_x(), frame.y()))
+        .line_to(Point::new(frame.max_x(), frame.max_y()))
+        .line_to(Point::new(frame.x(), frame.max_y()))
+        .close()
+        .build()
 }
 
 /// `A[(text)]` — a database cylinder, drawn as a body with a visible top rim.
@@ -235,31 +242,33 @@ fn cylinder(frame: Rect) -> Outline {
     let (right, bottom) = (frame.max_x(), frame.max_y());
     let cap = frame.height() * CYLINDER_CAP_RATIO;
 
-    let mut path = Path::new();
-    path.move_to(Point::new(x, y + cap));
-    path.line_to(Point::new(x, bottom - cap));
-    path.bezier_to(
-        Point::new(x, bottom),
-        Point::new(right, bottom),
-        Point::new(right, bottom - cap),
-    );
-    path.line_to(Point::new(right, y + cap));
-    path.bezier_to(
-        Point::new(right, y),
-        Point::new(x, y),
-        Point::new(x, y + cap),
-    );
-    path.close();
+    let path = Path::builder()
+        .move_to(Point::new(x, y + cap))
+        .line_to(Point::new(x, bottom - cap))
+        .cubic_to(
+            Point::new(x, bottom),
+            Point::new(right, bottom),
+            Point::new(right, bottom - cap),
+        )
+        .line_to(Point::new(right, y + cap))
+        .cubic_to(
+            Point::new(right, y),
+            Point::new(x, y),
+            Point::new(x, y + cap),
+        )
+        .close()
+        .build();
 
     // The rim is the far edge of the top cap, drawn over the fill.
     let far_edge = cap.mul_add(2.0, y);
-    let mut rim = Path::new();
-    rim.move_to(Point::new(x, y + cap));
-    rim.bezier_to(
-        Point::new(x, far_edge),
-        Point::new(right, far_edge),
-        Point::new(right, y + cap),
-    );
+    let rim = Path::builder()
+        .move_to(Point::new(x, y + cap))
+        .cubic_to(
+            Point::new(x, far_edge),
+            Point::new(right, far_edge),
+            Point::new(right, y + cap),
+        )
+        .build();
 
     Outline {
         body: Some(path),
@@ -270,19 +279,14 @@ fn cylinder(frame: Rect) -> Outline {
 /// `A((text))` and `A(((text)))`.
 fn round(frame: Rect, doubled: bool) -> Outline {
     let radius = frame.width().min(frame.height()) / 2.0;
-    let mut path = Path::new();
-    circle(&mut path, frame.center(), radius);
-
     let details = if doubled {
-        let mut inner = Path::new();
-        circle(&mut inner, frame.center(), radius - DOUBLE_CIRCLE_GAP);
-        vec![inner]
+        vec![circle(frame.center(), radius - DOUBLE_CIRCLE_GAP)]
     } else {
         Vec::new()
     };
 
     Outline {
-        body: Some(path),
+        body: Some(circle(frame.center(), radius)),
         details,
     }
 }
@@ -350,28 +354,24 @@ fn angular(shape: NodeShape, frame: Rect) -> Vec<Point> {
 
 /// A closed path through `points`.
 fn polygon(points: &[Point]) -> Path {
-    let mut path = Path::new();
     let Some((first, rest)) = points.split_first() else {
-        return path;
+        return Path::builder().build();
     };
-    path.move_to(*first);
-    for point in rest {
-        path.line_to(*point);
-    }
-    path.close();
-    path
+    rest.iter()
+        .fold(Path::builder().move_to(*first), |path, point| {
+            path.line_to(*point)
+        })
+        .close()
+        .build()
 }
 
 /// A full circle of `radius` centred on `centre`.
-fn circle(path: &mut Path, centre: Point, radius: f32) {
-    path.ellipse(
-        centre,
-        Size::new(radius, radius),
-        0.0,
-        0.0,
-        core::f32::consts::TAU,
-        false,
-    );
+fn circle(centre: Point, radius: f32) -> Path {
+    Path::builder()
+        .move_to(Point::new(centre.x + radius, centre.y))
+        .arc(centre, (radius, radius), 0.0, core::f32::consts::TAU)
+        .close()
+        .build()
 }
 
 /// `A([text])` — a rectangle whose left and right ends are semicircles of
@@ -389,11 +389,9 @@ fn stadium(frame: Rect) -> Contour {
 /// height, so the two ends meet in the middle and become semicircles.
 ///
 /// The corners are cubic Beziers appended to the one running contour rather
-/// than `Path::arc_to` tangent arcs. `arc_to` would be the obvious spelling and
-/// it is the wrong one twice over: it starts a fresh sub-path at each arc, so
-/// the outline arrives at the renderer in five disjoint pieces that no `close`
-/// can join, and it places the tangent arc's centre outside the corner it is
-/// turning, so each arc lands away from the edges it was meant to join.
+/// than tangent arcs. A tangent arc would be the obvious spelling and it is the
+/// wrong one: a quarter-circle is exactly what a cubic with these control
+/// points draws, and the cubics keep the outline one closed contour.
 fn rounded_rect(frame: Rect, radius: f32) -> Contour {
     let radius = radius.min(frame.width() / 2.0).min(frame.height() / 2.0);
     let (x, y) = (frame.x(), frame.y());
@@ -429,22 +427,18 @@ fn actor(frame: Rect) -> Outline {
     let hips = h.mul_add(0.62, y);
     let arms = (hips - shoulders).mul_add(0.3, shoulders);
 
-    let mut head = Path::new();
-    circle(
-        &mut head,
-        Point::new(centre_x, y + head_radius),
-        head_radius,
-    );
+    let head = circle(Point::new(centre_x, y + head_radius), head_radius);
 
-    let mut body = Path::new();
-    body.move_to(Point::new(centre_x, shoulders));
-    body.line_to(Point::new(centre_x, hips));
-    body.move_to(Point::new(w.mul_add(0.2, x), arms));
-    body.line_to(Point::new(w.mul_add(0.8, x), arms));
-    body.move_to(Point::new(centre_x, hips));
-    body.line_to(Point::new(w.mul_add(0.25, x), y + h));
-    body.move_to(Point::new(centre_x, hips));
-    body.line_to(Point::new(w.mul_add(0.75, x), y + h));
+    let body = Path::builder()
+        .move_to(Point::new(centre_x, shoulders))
+        .line_to(Point::new(centre_x, hips))
+        .move_to(Point::new(w.mul_add(0.2, x), arms))
+        .line_to(Point::new(w.mul_add(0.8, x), arms))
+        .move_to(Point::new(centre_x, hips))
+        .line_to(Point::new(w.mul_add(0.25, x), y + h))
+        .move_to(Point::new(centre_x, hips))
+        .line_to(Point::new(w.mul_add(0.75, x), y + h))
+        .build();
 
     Outline {
         body: Some(head),

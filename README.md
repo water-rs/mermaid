@@ -1,7 +1,6 @@
 # waterui-mermaid
 
-Mermaid diagrams for WaterUI, recorded through the canvas onto the
-`waterui_graphics::draw` recording contract.
+Mermaid diagrams for WaterUI, drawn on a `waterui_graphics::canvas`.
 
 ```rust
 use waterui_mermaid::mermaid;
@@ -21,11 +20,10 @@ own grammar and geometry. Everything after that is this crate's:
   host installed for every other component. Without it, boxes would be sized
   from a browser compatibility profile and the glyphs inside them drawn from
   ours, and the text would not fit.
-- **Geometry is recorded through the canvas onto the
-  `waterui_graphics::draw` contract.** Node outlines, subgraph frames and
-  routed connectors are vector paths on the render-target-neutral recording
-  contract, so one drawing path serves every backend.
-- **Text is not drawn into the scene.** Labels are real `text()` views placed
+- **Geometry is drawn on a `waterui_graphics::canvas`.** Node outlines,
+  subgraph frames and routed connectors are vector paths recorded once, when
+  the canvas mounts, so one drawing path serves every backend.
+- **Text is not drawn on the canvas.** Labels are real `text()` views placed
   into the boxes layout reserved for them, which is what gives a diagram a
   meaningful accessibility tree and the platform's own text rendering.
 - **Colours come from theme tokens.** A diagram follows a light/dark switch

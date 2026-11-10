@@ -873,7 +873,7 @@ sequenceDiagram
     /// pass against a measurer that ignored its collection entirely.
     #[test]
     fn the_installed_collection_is_what_measures() {
-        let faceless = FontCollection::new(parley::FontContext {
+        let faceless = FontCollection::from_parley(parley::FontContext {
             collection: parley::fontique::Collection::new(parley::fontique::CollectionOptions {
                 system_fonts: false,
                 ..parley::fontique::CollectionOptions::default()

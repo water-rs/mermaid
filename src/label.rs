@@ -8,7 +8,8 @@
 //! placed into the box layout reserved for it.
 
 use waterui_core::layout::{
-    Layout, Point, ProposalSize, Rect, Size, StretchAxis, SubView, SubviewPlacement,
+    Layout, LayoutError, PlacementInput, Point, ProposalSize, Rect, Size, StretchAxis, SubView,
+    SubviewPlacement, UnitPoint,
 };
 use waterui_core::{Environment, View};
 use waterui_graphics::color::{Color, ForegroundColor, MutedForegroundColor};
@@ -38,6 +39,17 @@ impl Placement {
 impl Layout for Placement {
     fn size_that_fits(&self, _proposal: ProposalSize, _children: &[&dyn SubView]) -> Size {
         *self.frame.size()
+    }
+
+    /// The reserved box is the label's answer, at the bounds' origin: the text
+    /// is centred inside it by [`place`](Layout::place), not the box in the
+    /// bounds.
+    fn resolve_extent(
+        &self,
+        input: PlacementInput,
+        _children: &[&dyn SubView],
+    ) -> Result<Rect, LayoutError> {
+        Ok(input.bounds.align(input.extent()?, UnitPoint::TOP_LEADING))
     }
 
     fn place(

@@ -91,7 +91,7 @@ impl TextMeasurer for Measurer {
         // `Layout` is owned once it is built, so line breaking and measurement
         // happen after both borrows have ended.
         let shaping = &*self.shaping;
-        let mut built = shaping.fonts.use_fonts(|fonts| {
+        let mut built = shaping.fonts.with_parley(|fonts| {
             let mut layout = shaping.layout.borrow_mut();
             let mut builder = layout.ranged_builder(fonts, text, 1.0, true);
             builder.push_default(StyleProperty::FontSize(f32::from_f64_lossless(
