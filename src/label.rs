@@ -7,13 +7,15 @@
 //! text rendering, and could not be selected. So every label is a `text()` view,
 //! placed into the box layout reserved for it.
 
-use waterui_core::layout::{Layout, Point, ProposalSize, Rect, Size, StretchAxis, SubView};
+use waterui_core::layout::{
+    Layout, LayoutError, PlacementInput, Point, ProposalSize, Rect, Size, StretchAxis, SubView,
+    SubviewPlacement, UnitPoint,
+};
 use waterui_core::{Environment, View};
 use waterui_graphics::color::{Color, ForegroundColor, MutedForegroundColor};
 use waterui_text::text;
 
 use crate::layout::{Emphasis, Label};
-use crate::measure::FromF64Lossless as _;
 
 /// Places one label centred in the box the diagram reserved for it.
 ///
@@ -39,17 +41,36 @@ impl Layout for Placement {
         *self.frame.size()
     }
 
-    fn place(&self, bounds: Rect, children: &[&dyn SubView]) -> Vec<Rect> {
+    /// The reserved box is the label's answer, at the bounds' origin: the text
+    /// is centred inside it by [`place`](Layout::place), not the box in the
+    /// bounds.
+    fn resolve_extent(
+        &self,
+        input: PlacementInput,
+        _children: &[&dyn SubView],
+    ) -> Result<Rect, LayoutError> {
+        Ok(input.bounds.align(input.extent()?, UnitPoint::TOP_LEADING))
+    }
+
+    fn place(
+        &self,
+        bounds: Rect,
+        _proposal: ProposalSize,
+        children: &[&dyn SubView],
+    ) -> Vec<SubviewPlacement> {
         let [child] = children else {
             panic!("a diagram label must contain exactly one text view");
         };
         let size = child.measure(ProposalSize::UNSPECIFIED).size;
-        vec![Rect::new(
-            Point::new(
-                bounds.mid_x() - size.width / 2.0,
-                bounds.mid_y() - size.height / 2.0,
+        vec![SubviewPlacement::new(
+            Rect::new(
+                Point::new(
+                    bounds.mid_x() - size.width / 2.0,
+                    bounds.mid_y() - size.height / 2.0,
+                ),
+                size,
             ),
-            size,
+            ProposalSize::UNSPECIFIED,
         )]
     }
 
@@ -85,9 +106,7 @@ impl View for LabelView {
             Emphasis::Muted => Color::new(MutedForegroundColor),
             Emphasis::Normal | Emphasis::Title => Color::new(ForegroundColor),
         };
-        text(self.label.text)
-            .size(f32::from_f64_lossless(style.font_size))
-            .color(colour)
+        text(self.label.text).size(style.font_size).color(colour)
     }
 
     fn stretch_axis(&self) -> StretchAxis {

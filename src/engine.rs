@@ -11,8 +11,8 @@ use merman_render::LayoutOptions;
 use merman_render::environment::RenderEnvironment;
 use merman_render::family::{self, LayoutProjection};
 use merman_render::model::{LayoutEdge, LayoutLabel, LayoutNode};
+use waterui_core::Str;
 use waterui_core::layout::{Point, Rect, Size};
-use waterui_str::Str;
 use waterui_text::FontCollection;
 
 use crate::layout::{
@@ -873,7 +873,7 @@ sequenceDiagram
     /// pass against a measurer that ignored its collection entirely.
     #[test]
     fn the_installed_collection_is_what_measures() {
-        let faceless = FontCollection::new(parley::FontContext {
+        let faceless = FontCollection::from_parley(parley::FontContext {
             collection: parley::fontique::Collection::new(parley::fontique::CollectionOptions {
                 system_fonts: false,
                 ..parley::fontique::CollectionOptions::default()

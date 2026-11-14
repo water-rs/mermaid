@@ -1,0 +1,62 @@
+# How many processes may compile Metal shaders at once on macOS.
+#
+# Every test process that mounts a `waterui-testing` host builds its own
+# `wgpu::Device`, and each device runs Vello's shader initialisation. On macOS
+# that is `newLibraryWithSource`, which goes through Metal's on-disk
+# shader-compiler cache — a single file shared by every process on the machine.
+# Metal does not survive many processes reading and writing it at once: a run
+# of this suite aborted with
+#
+#     SIGBUS, subtype "FS pagein error: 22 Invalid argument"
+#     thread "Vello shader initialisation worker thread"
+#       MTLCompilerFSCache::getElementImpl
+#       MTLLibraryBuilder::newLibraryWithSource
+#       wgpu_hal::metal::Device::load_shader
+#       vello::WgpuEngine::build_shaders_if_needed
+#
+# on a machine that also had three cargo builds running (water-rs/waterui#434).
+# The faulting page belongs to that cache file, not to anything this crate
+# allocated: a reader paged it in while another process rewrote it.
+#
+# The cap costs nothing, which is what makes it the right answer rather than a
+# trade. These tests all queue on one GPU, so parallelism past a handful buys
+# no wall clock — measured on this suite, twice each:
+#
+#     -j 32   3.415s  2.797s
+#     -j 8    2.265s  2.624s
+#     -j 4    2.496s  2.425s
+#
+# The cap only ever binds on a developer machine — GitHub's macOS runners have
+# three or four cores, so nextest already runs at or below four processes
+# there — and a developer machine with a dozen cores is exactly where the
+# process storm happens.
+[test-groups.metal-shader-compile]
+max-threads = 4
+
+[[profile.default.overrides]]
+platform = 'cfg(target_os = "macos")'
+filter = 'package(waterui-mermaid)'
+test-group = 'metal-shader-compile'
+
+# How many wgpu devices may exist at once on a Windows runner.
+#
+# Every test here mounts a `waterui-testing` host, and each host requests its
+# own `wgpu::Device`. On a runner with a real GPU that is cheap; on
+# `windows-latest` there is no GPU at all, so every device is a WARP device
+# living in the machine's memory alongside the others on its four cores. The
+# monorepo suite ran out: tests failed in `request_device` with
+# `Core(Device(OutOfMemory))`, exhausted their retries, and the same tests
+# passed on retry in earlier runs — the signature of sitting exactly at a
+# memory limit rather than of a defect.
+#
+# A cap, not a skip: every test still runs, two at a time instead of four, so
+# the peak number of live WARP devices halves. Scoped to Windows because it is
+# the only platform without a real GPU — the Linux runners rasterize on
+# llvmpipe, which is far cheaper per device, and macOS has Metal.
+[test-groups.gpu-device]
+max-threads = 2
+
+[[profile.ci.overrides]]
+platform = 'cfg(target_os = "windows")'
+filter = 'all()'
+test-group = 'gpu-device'
