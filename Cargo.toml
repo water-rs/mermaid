@@ -125,21 +125,21 @@ waterui-webview = { git = "https://github.com/water-rs/waterui", branch = "dev" 
 # Extracted component crates the facade names as optional dependencies. They
 # ride their `dev` branches, and svg the revision the framework's own patch
 # table pins.
-waterui-barcode = { git = "https://github.com/water-rs/barcode", branch = "dev" }
-waterui-chart = { git = "https://github.com/water-rs/chart", branch = "dev" }
-waterui-image = { git = "https://github.com/water-rs/image", branch = "dev" }
-waterui-map-gpu = { git = "https://github.com/water-rs/map-gpu", branch = "dev" }
-waterui-math = { git = "https://github.com/water-rs/math", branch = "dev" }
-waterui-particle = { git = "https://github.com/water-rs/particle", branch = "dev" }
-waterui-svg = { git = "https://github.com/water-rs/svg", rev = "16f99e021f735d0b1b31c95552b074e953d56418" }
-waterui-video-gpu = { git = "https://github.com/water-rs/video-gpu", branch = "dev" }
+waterui-barcode = { git = "https://github.com/water-rs/barcode", branch = "main" }
+waterui-chart = { git = "https://github.com/water-rs/chart", branch = "main" }
+waterui-image = { git = "https://github.com/water-rs/image", branch = "main" }
+waterui-map-gpu = { git = "https://github.com/water-rs/map-gpu", branch = "main" }
+waterui-math = { git = "https://github.com/water-rs/math", branch = "main" }
+waterui-particle = { git = "https://github.com/water-rs/particle", branch = "main" }
+waterui-svg = { git = "https://github.com/water-rs/svg", branch = "main" }
+waterui-video-gpu = { git = "https://github.com/water-rs/video-gpu", branch = "main" }
 
 # The mounted test graph's backend pair: `hydrolysis` lives in-tree at
 # `backends/hydrolysis`, so it resolves from the same framework commit as
 # every `waterui-*` crate; its Material 3 theme is still external and follows
 # its `dev`, the source the framework's own patch table names.
 hydrolysis = { git = "https://github.com/water-rs/waterui", branch = "dev" }
-hydrolysis-m3 = { git = "https://github.com/water-rs/hydrolysis-m3", branch = "dev" }
+hydrolysis-m3 = { git = "https://github.com/water-rs/hydrolysis-m3", branch = "main" }
 
 # `cherenkov` is unpublished; like the framework's own table, this entry
 # resolves a registry `cherenkov = "0.0.0"` requirement to the in-tree
