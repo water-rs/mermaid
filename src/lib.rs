@@ -142,10 +142,6 @@ impl View for Mermaid {
             Err(error) => AnyView::new(undrawable(&error)),
         }
     }
-
-    fn stretch_axis(&self) -> StretchAxis {
-        StretchAxis::None
-    }
 }
 
 /// The canvas and the labels of a diagram that laid out successfully.

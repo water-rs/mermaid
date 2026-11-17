@@ -108,8 +108,4 @@ impl View for LabelView {
         };
         text(self.label.text).size(style.font_size).color(colour)
     }
-
-    fn stretch_axis(&self) -> StretchAxis {
-        StretchAxis::None
-    }
 }
