@@ -1,4 +1,4 @@
-//! `install` claiming a fence inside a real Markdown document.
+//! `MermaidFences` claiming a fence inside a real Markdown document.
 //!
 //! The unit of work here is the whole path: `pulldown-cmark` keeps the info
 //! token, `Code` offers it to the hook, and the hook turns it into a diagram —
@@ -6,11 +6,11 @@
 //! an ordinary code block.
 
 use hydrolysis_m3::Material3;
-use waterui::env::use_env;
-use waterui::metadata::Metadata;
 use waterui::prelude::*;
+use waterui::view::hook::Hook;
 use waterui::widget::RichText;
 use waterui::widget::code::CodeConfig;
+use waterui_mermaid::MermaidFences;
 use waterui_testing::{OffscreenApp, Role, ui as test_ui};
 
 const DOC: &str = "\
@@ -31,12 +31,7 @@ fn app() -> OffscreenApp {
     test_ui()
         .viewport(900, 900)
         .theme(Material3::defaults())
-        .mount_offscreen(|| {
-            use_env(|mut env: Environment| {
-                waterui_mermaid::install(&mut env);
-                Metadata::new(RichText::from_markdown(DOC), env)
-            })
-        })
+        .mount_offscreen(|| RichText::from_markdown(DOC).hooks(MermaidFences))
 }
 
 #[core::prelude::v1::test]
@@ -56,20 +51,29 @@ fn every_other_fence_is_still_a_code_block() {
     app.query().role(Role::LABEL).label("Rust").assert_exists();
 }
 
-/// A hook already on the environment is the platform's, and wins.
+/// Claims every fence.
+#[derive(Clone)]
+struct Bridged;
+
+impl Hook for Bridged {
+    type Target = CodeConfig;
+
+    fn apply(&self, _config: CodeConfig, _env: &Environment) -> Result<impl View, CodeConfig> {
+        Ok(text("bridged"))
+    }
+}
+
+/// A hook scoped closer to the document than `MermaidFences` is offered the
+/// fence first, and keeps it.
 #[core::prelude::v1::test]
-fn install_yields_to_a_hook_that_is_already_there() {
+fn a_nearer_hook_keeps_the_fence() {
     let mut app = test_ui()
         .viewport(600, 400)
         .theme(Material3::defaults())
         .mount_offscreen(|| {
-            use_env(|mut env: Environment| {
-                env.insert_hook::<CodeConfig, AnyView>(|_env, _config| {
-                    AnyView::new(text("bridged"))
-                });
-                waterui_mermaid::install(&mut env);
-                Metadata::new(RichText::from_markdown(DOC), env)
-            })
+            RichText::from_markdown(DOC)
+                .hooks(Bridged)
+                .hooks(MermaidFences)
         });
 
     app.query()
@@ -82,6 +86,6 @@ fn install_yields_to_a_hook_that_is_already_there() {
             .label("Parse")
             .all()
             .is_empty(),
-        "the hook already installed must keep the fence, not hand it to Mermaid"
+        "the nearer hook must keep the fence, not hand it to Mermaid"
     );
 }

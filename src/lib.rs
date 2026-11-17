@@ -50,7 +50,7 @@ use waterui_core::layout::{
     Layout, LayoutError, PlacementInput, Point, ProposalSize, Rect, Size, StretchAxis, SubView,
     SubviewPlacement, UnitPoint,
 };
-use waterui_core::view::{Hook, ViewConfiguration as _};
+use waterui_core::view::hook::Hook;
 use waterui_core::{AnyView, Environment, Str, View, resolve::Resolvable as _};
 use waterui_graphics::canvas::Canvas;
 use waterui_layout::container::FixedContainer;
@@ -109,30 +109,29 @@ pub fn mermaid(source: impl Into<Str>) -> Mermaid {
     Mermaid::new(source)
 }
 
-/// Installs the realization that turns a `mermaid` fence into a diagram.
+/// The hook that turns a `mermaid` fence into a diagram.
 ///
-/// Call it from the application's `app(env)`, as with any component that lives
-/// in its own crate — the `waterui` crate does not depend on this one, so
-/// nothing installs this on an application's behalf. A `Hook<CodeConfig>`
-/// already present — a platform bridge, another realization — wins, and this
-/// is a no-op.
+/// Scope it over the views whose Markdown should draw diagrams, usually the
+/// application's root, with `.hooks(MermaidFences)` — the `waterui` crate does
+/// not depend on this one, so nothing scopes it on an application's behalf.
 ///
-/// A fence tagged anything else keeps the ordinary [`Code`](waterui_text::code::Code)
-/// rendering: `Hook::from` hands the closure an environment with this hook
-/// already removed, so [`ViewConfiguration::render`](waterui_core::view::ViewConfiguration::render)
-/// cannot recurse back into it.
-pub fn install(env: &mut Environment) {
-    if env.get::<Hook<CodeConfig>>().is_some() {
-        return;
-    }
-    env.insert_hook::<CodeConfig, AnyView>(|_env, config| {
+/// A fence tagged anything else is declined and keeps the ordinary
+/// [`Code`](waterui_text::code::Code) rendering, or goes to the next hook in
+/// scope.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct MermaidFences;
+
+impl Hook for MermaidFences {
+    type Target = CodeConfig;
+
+    fn apply(&self, config: CodeConfig, _env: &Environment) -> Result<impl View, CodeConfig> {
         match config.info().map(AsRef::<str>::as_ref) {
             // `mmd` is Mermaid's own file extension, and the tag editors emit for a
             // Mermaid block alongside the spelled-out one.
-            Some("mermaid" | "mmd") => AnyView::new(Mermaid::new(config.content().clone())),
-            _ => AnyView::new(config.render()),
+            Some("mermaid" | "mmd") => Ok(Mermaid::new(config.content().clone())),
+            _ => Err(config),
         }
-    });
+    }
 }
 
 impl View for Mermaid {
@@ -141,10 +140,6 @@ impl View for Mermaid {
             Ok(diagram) => AnyView::new(drawn(&diagram, env)),
             Err(error) => AnyView::new(undrawable(&error)),
         }
-    }
-
-    fn stretch_axis(&self) -> StretchAxis {
-        StretchAxis::None
     }
 }
 

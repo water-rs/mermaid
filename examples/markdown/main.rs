@@ -9,9 +9,8 @@
 //! The PNG lands at `markdown/document/rendered.png` under
 //! `WATERUI_TEST_ARTIFACTS_DIR`, or the system temp dir when that is unset.
 
-use waterui::env::use_env;
-use waterui::metadata::Metadata;
 use waterui::prelude::*;
+use waterui_mermaid::MermaidFences;
 use waterui_testing::{Role, ui as test_ui};
 
 fn main() {
@@ -23,14 +22,11 @@ fn main() {
         .viewport(800, 1000)
         .theme(hydrolysis_m3::Material3::defaults())
         .mount_offscreen(|| {
-            // Installing the Mermaid realization is the application's job —
-            // `waterui` has no dependency on `waterui-mermaid`, which is what
-            // lets a build that does not want diagrams render the fence as
-            // plain code.
-            use_env(|mut env: Environment| {
-                waterui_mermaid::install(&mut env);
-                Metadata::new(scroll(include_markdown!("example.md").padding()), env)
-            })
+            // Scoping the Mermaid hook is the application's job — `waterui`
+            // has no dependency on `waterui-mermaid`, which is what lets a
+            // build that does not want diagrams render the fence as plain
+            // code.
+            scroll(include_markdown!("example.md").padding()).hooks(MermaidFences)
         });
 
     // The fence became a diagram: its node and edge labels reached the

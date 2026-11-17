@@ -37,19 +37,15 @@ than its container is the container's to scroll.
 ## Markdown
 
 A ```` ```mermaid ```` fence inside a Markdown document stays a plain code
-block until the environment carries this crate's hook — `waterui` has no
+block until this crate's hook is scoped over it — `waterui` has no
 dependency on `waterui-mermaid`, which is what lets a build that does not want
-diagrams render the fence as code. Install it once at the root of the app:
+diagrams render the fence as code. Scope it once at the root of the app:
 
 ```rust
-use waterui::env::use_env;
-use waterui::metadata::Metadata;
 use waterui::prelude::*;
+use waterui_mermaid::MermaidFences;
 
-use_env(|mut env: Environment| {
-    waterui_mermaid::install(&mut env);
-    Metadata::new(scroll(include_markdown!("example.md").padding()), env)
-})
+scroll(include_markdown!("example.md").padding()).hooks(MermaidFences)
 ```
 
 `examples/markdown` mounts a full document this way and captures it to a PNG:

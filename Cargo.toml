@@ -139,7 +139,7 @@ waterui-video-gpu = { git = "https://github.com/water-rs/video-gpu", branch = "m
 # every `waterui-*` crate; its Material 3 theme is still external and follows
 # its `dev`, the source the framework's own patch table names.
 hydrolysis = { git = "https://github.com/water-rs/waterui", branch = "main" }
-hydrolysis-m3 = { git = "https://github.com/water-rs/hydrolysis-m3", branch = "main" }
+hydrolysis-m3 = { git = "https://github.com/water-rs/hydrolysis-m3", branch = "refactor/typed-navigation" }
 
 # `cherenkov` is unpublished; like the framework's own table, this entry
 # resolves a registry `cherenkov = "0.0.0"` requirement to the in-tree
