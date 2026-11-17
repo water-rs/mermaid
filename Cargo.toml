@@ -93,34 +93,34 @@ ignored = ["waterui"]
 xcb = { git = "https://github.com/rust-x-bindings/rust-xcb", rev = "ae3b2cd080e78173223038ccbebdc644eaf4a9ad" }
 block = { git = "https://github.com/Dicklesworthstone/rust-block", rev = "b39ae859d1ee8e8cb5eef6a516471f1578d26b96" }
 
-waterui = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-assets = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-assets-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-assets-macros = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-assets-planner = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-backend-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-controls = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-core = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-dylib = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-form = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-graphics = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-icon = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-inspector-protocol = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-internal = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-layout = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-locale = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-macros = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-map = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-media = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-navigation = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-preview-protocol = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-shape = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-testing = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-text = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-url = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-video = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-watcher-set = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
-waterui-webview = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
+waterui = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-assets = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-assets-core = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-assets-macros = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-assets-planner = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-backend-core = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-controls = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-core = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-dylib = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-form = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-graphics = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-icon = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-inspector-protocol = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-internal = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-layout = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-locale = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-macros = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-map = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-media = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-navigation = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-preview-protocol = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-shape = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-testing = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-text = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-url = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-video = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-watcher-set = { git = "https://github.com/water-rs/waterui", branch = "main" }
+waterui-webview = { git = "https://github.com/water-rs/waterui", branch = "main" }
 
 # Extracted component crates the facade names as optional dependencies. They
 # ride their `dev` branches, and svg the revision the framework's own patch
@@ -138,13 +138,13 @@ waterui-video-gpu = { git = "https://github.com/water-rs/video-gpu", branch = "m
 # `backends/hydrolysis`, so it resolves from the same framework commit as
 # every `waterui-*` crate; its Material 3 theme is still external and follows
 # its `dev`, the source the framework's own patch table names.
-hydrolysis = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
+hydrolysis = { git = "https://github.com/water-rs/waterui", branch = "main" }
 hydrolysis-m3 = { git = "https://github.com/water-rs/hydrolysis-m3", branch = "refactor/typed-navigation" }
 
 # `cherenkov` is unpublished; like the framework's own table, this entry
 # resolves a registry `cherenkov = "0.0.0"` requirement to the in-tree
 # engine at the framework's commit.
-cherenkov = { git = "https://github.com/water-rs/waterui", branch = "refactor/typed-hooks" }
+cherenkov = { git = "https://github.com/water-rs/waterui", branch = "main" }
 
 # suiteki 0.1.1 on crates.io implements nami-core 0.3's `Signal`; suiteki's
 # `dev` implements 0.5's (water-rs/suiteki#29), the source the framework's own
